@@ -23,6 +23,7 @@ const ThreeState = {
     projectorCone: null,
     projectorConeWireframe: null,
     screenMesh: null,
+    screenBorder: null,  // Added this line
     projectorMesh: null,
     lensMesh: null
 };
