@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projector Throw Ratio & FOV Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 Projector Throw Calculator</h1>
+        
+        <div class="main-layout">
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label>Conversion Mode</label>
+                    <div class="viz-tabs" id="modeTabs">
+                        <button class="viz-tab active" data-mode="ratio-to-fov">Ratio → FOV</button>
+                        <button class="viz-tab" data-mode="fov-to-ratio">FOV → Ratio</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Aspect Ratio</label>
+                    <select id="aspectRatio">
+                        <option value="16:9">16:9 (Widescreen)</option>
+                        <option value="4:3">4:3 (Standard)</option>
+                        <option value="21:9">21:9 (Ultrawide)</option>
+                        <option value="16:10">16:10 (WXGA)</option>
+                        <option value="1:1">1:1 (Square)</option>
+                        <option value="2.35:1">2.35:1 (Cinemascope)</option>
+                        <option value="1.85:1">1.85:1 (Film)</option>
+                        <option value="custom">Custom...</option>
+                    </select>
+                    <div class="aspect-ratio-custom" id="customAspect">
+                        <input type="number" id="customWidth" value="16" min="0.1" step="0.1">
+                        <span>:</span>
+                        <input type="number" id="customHeight" value="9" min="0.1" step="0.1">
+                    </div>
+                </div>
+
+                <div class="control-group" id="throwRatioGroup">
+                    <label>Throw Ratio <span class="info-tooltip" title="Distance / Screen Width">?</span></label>
+                    <input type="number" id="throwRatio" value="1.0" min="0.1" max="5" step="0.01">
+                    <input type="range" id="throwRatioSlider" min="0.2" max="3" step="0.01" value="1.0">
+                    <div class="slider-value" id="throwRatioValue">1.00:1</div>
+                </div>
+
+                <div class="control-group" id="fovGroup" style="display: none;">
+                    <label>Horizontal FOV (degrees)</label>
+                    <input type="number" id="fovInput" value="53.13" min="5" max="170" step="0.1">
+                    <input type="range" id="fovSlider" min="10" max="150" step="0.1" value="53.13">
+                    <div class="slider-value" id="fovValue">53.13°</div>
+                </div>
+
+                <div class="control-group">
+                    <label>Throw Distance</label>
+                    <div class="unit-toggle" id="unitToggle">
+                        <button class="unit-btn active" data-unit="m">Meters</button>
+                        <button class="unit-btn" data-unit="ft">Feet</button>
+                    </div>
+                    <input type="range" id="throwDistance" min="0.5" max="15" step="0.1" value="3">
+                    <div class="slider-value" id="throwDistanceValue">3.00 m</div>
+                </div>
+
+                <div class="results-panel">
+                    <h3>📊 Calculated Values</h3>
+                    <div class="result-item">
+                        <span class="result-label">Horizontal FOV:</span>
+                        <span class="result-value" id="resultHFov">53.13°</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Vertical FOV:</span>
+                        <span class="result-value" id="resultVFov">29.86°</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Throw Ratio:</span>
+                        <span class="result-value" id="resultRatio">1.00:1</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Screen Width:</span>
+                        <span class="result-value" id="resultWidth">3.00 m</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Screen Height:</span>
+                        <span class="result-value" id="resultHeight">1.69 m</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Diagonal:</span>
+                        <span class="result-value" id="resultDiagonal">136.2"</span>
+                    </div>
+                </div>
+
+                <div class="formula-display">
+                    <strong>Formulas:</strong><br>
+                    H-FOV = 2 × arctan(1 / (2 × TR))<br>
+                    V-FOV = 2 × arctan(H / (W × 2 × TR))<br>
+                    TR = 1 / (2 × tan(H-FOV / 2))
+                </div>
+            </div>
+
+            <div class="visualization-panel">
+                <div class="viz-container">
+                    <h2>📐 2D Visualization</h2>
+                    <div class="viz-tabs" id="viewTabs">
+                        <button class="viz-tab active" data-view="top">Top View</button>
+                        <button class="viz-tab" data-view="side">Side View</button>
+                    </div>
+                    <canvas id="canvas2d"></canvas>
+                </div>
+
+                <div class="viz-container">
+                    <h2>🎮 3D Visualization</h2>
+                    <p style="font-size: 0.85em; color: rgba(255,255,255,0.6); margin-bottom: 10px;">
+                        Click and drag to rotate • Scroll to zoom
+                    </p>
+                    <div id="canvas3d"></div>
+                </div>
+
+                <div class="viz-container screen-preview">
+                    <h2>📺 Screen Size Preview</h2>
+                    <div class="screen-box" id="screenBox">
+                        <span id="screenDimensions">3.00m × 1.69m</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load JavaScript modules in order -->
+    <script src="js/state.js"></script>
+    <script src="js/conversions.js"></script>
+    <script src="js/calculations.js"></script>
+    <script src="js/canvas2d.js"></script>
+    <script src="js/canvas3d.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
